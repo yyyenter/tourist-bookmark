@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-Content *)",
+      "Bash(pip list *)",
+      "Bash(findstr -i \"fastapi sqlalchemy uvicorn pydantic\")",
+      "Bash(dir \"E:\\\\Python\\\\FASTAPI_SQL\\\\*.csv\" /b)",
+      "Bash(dir *)",
+      "WebFetch(domain:github.com)",
+      "WebSearch",
+      "Bash(pip show *)",
+      "Bash(mkdir -p \"E:/Python/FASTAPI_SQL/frontend\")",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npm run *)",
+      "Bash(mysqladmin ping *)",
+      "Bash(uvicorn main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(curl *)",
+      "Bash(pip install *)"
+    ]
+  }
+}
