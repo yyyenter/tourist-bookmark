@@ -55,3 +55,4 @@ frontend/dist/
 *.log
 
 knowledge/ 
+full-stack-fastapi-template/

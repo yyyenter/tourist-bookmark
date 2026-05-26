@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 """
-
 # ==========================================
 # Attraction 表 - 景点数据（从 CSV 导入）
 # ==========================================
 CREATE_ATTRACTION_TABLE = """
 CREATE TABLE IF NOT EXISTS attractions (
     id INT PRIMARY KEY AUTO_INCREMENT COMMENT '内部主键',
-    attraction_id INT UNIQUE NOT NULL COMMENT '原始景点ID',
+    attraction_id INT NOT NULL COMMENT '原始景点ID',
+    source_type VARCHAR(20) DEFAULT 'domestic' COMMENT '数据来源：domestic/foreign',
     city_name VARCHAR(100) NOT NULL COMMENT '城市名称',
     attraction_name VARCHAR(200) NOT NULL COMMENT '景点名称',
     address VARCHAR(500) COMMENT '地址',
@@ -40,6 +40,68 @@ CREATE TABLE IF NOT EXISTS attractions (
     INDEX idx_type (type),
     INDEX idx_city_type (city_name, type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='景点表';
+"""
+
+# ==========================================
+# Accommodation 表 - 酒店数据（数据源2）
+# ==========================================
+CREATE_ACCOMMODATION_TABLE = """
+CREATE TABLE IF NOT EXISTS accommodations (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '内部主键',
+    accommodation_id INT NOT NULL COMMENT '原始酒店ID',
+    city_name VARCHAR(100) NOT NULL COMMENT '城市',
+    name VARCHAR(200) NOT NULL COMMENT '酒店名称',
+    name_en VARCHAR(200) COMMENT '英文名称',
+    feature_type VARCHAR(100) COMMENT '特色服务',
+    longitude DECIMAL(10, 6) COMMENT '经度',
+    latitude DECIMAL(10, 6) COMMENT '纬度',
+    ticket_price DECIMAL(10, 2) COMMENT '价格',
+    num_bed INT COMMENT '床位数',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_city (city_name),
+    INDEX idx_price (ticket_price)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='酒店表';
+"""
+
+# ==========================================
+# Restaurant 表 - 餐厅数据（数据源3）
+# ==========================================
+CREATE_RESTAURANT_TABLE = """
+CREATE TABLE IF NOT EXISTS restaurants (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '内部主键',
+    restaurant_id INT NOT NULL COMMENT '原始餐厅ID',
+    city_name VARCHAR(100) NOT NULL COMMENT '城市',
+    name VARCHAR(200) NOT NULL COMMENT '餐厅名称',
+    longitude DECIMAL(10, 6) COMMENT '经度',
+    latitude DECIMAL(10, 6) COMMENT '纬度',
+    ticket_price DECIMAL(10, 2) COMMENT '价格',
+    cuisine VARCHAR(100) COMMENT '菜系',
+    open_hours VARCHAR(100) COMMENT '营业时间',
+    recommended_foods TEXT COMMENT '推荐菜品',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_city (city_name),
+    INDEX idx_cuisine (cuisine)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='餐厅表';
+"""
+
+# ==========================================
+# Transport Route 表 - 交通路线（数据源5）
+# ==========================================
+CREATE_TRANSPORT_TABLE = """
+CREATE TABLE IF NOT EXISTS transport_routes (
+    id INT PRIMARY KEY AUTO_INCREMENT COMMENT '内部主键',
+    route_id VARCHAR(50) UNIQUE NOT NULL COMMENT '路线ID',
+    transport_type VARCHAR(20) NOT NULL COMMENT '类型：train/airplane',
+    from_location VARCHAR(100) NOT NULL COMMENT '出发地',
+    to_location VARCHAR(100) NOT NULL COMMENT '目的地',
+    begin_time VARCHAR(10) COMMENT '出发时间',
+    end_time VARCHAR(10) COMMENT '到达时间',
+    duration DECIMAL(5, 2) COMMENT '时长（小时）',
+    cost DECIMAL(10, 2) COMMENT '价格',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_route (from_location, to_location),
+    INDEX idx_type (transport_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='交通路线表';
 """
 
 # ==========================================

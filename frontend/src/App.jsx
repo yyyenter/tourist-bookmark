@@ -43,25 +43,19 @@ function AttractionList({ attractions, attractionCount, skip, limit, token, onAd
   const [filterType, setFilterType] = useState("");
 
   function search() {
-    onFetch({ skip: 0, search: filterSearch, city: "", type: "" });
-    setFilterCity("");
-    setFilterType("");
+    onFetch({ skip: 0, search: filterSearch, city: filterCity, type: filterType });
   }
 
   function selectCity(value) {
     setFilterCity(value);
-    setFilterType("");
-    setFilterSearch("");
-    if (value) onFetch({ skip: 0, city: value, type: "", search: "", mode: "city" });
-    else onFetch({ skip: 0, city: "", type: "", search: "" });
+    if (value) onFetch({ skip: 0, city: value, type: filterType, search: filterSearch });
+    else onFetch({ skip: 0, city: "", type: filterType, search: filterSearch });
   }
 
   function selectType(value) {
     setFilterType(value);
-    setFilterCity("");
-    setFilterSearch("");
-    if (value) onFetch({ skip: 0, city: "", type: value, search: "", mode: "type" });
-    else onFetch({ skip: 0, city: "", type: "", search: "" });
+    if (value) onFetch({ skip: 0, city: filterCity, type: value, search: filterSearch });
+    else onFetch({ skip: 0, city: filterCity, type: "", search: filterSearch });
   }
 
   function goPage(newSkip) {
@@ -236,7 +230,7 @@ export default function App() {
   const [attractions, setAttractions] = useState([]);
   const [attractionCount, setAttractionCount] = useState(0);
   const [skip, setSkip] = useState(0);
-  const limit = 10;
+  const limit = 12;
 
   // 收藏
   const [bookmarks, setBookmarks] = useState([]);
@@ -256,14 +250,7 @@ export default function App() {
       if (opts.type) params.append("type", opts.type);
       if (opts.search) params.append("search", opts.search);
 
-      let res;
-      if (opts.mode === "city" && opts.city) {
-        res = await fetch(`${API}/api/attractions/city/${encodeURIComponent(opts.city)}?${params}`);
-      } else if (opts.mode === "type" && opts.type) {
-        res = await fetch(`${API}/api/attractions/type/${encodeURIComponent(opts.type)}?${params}`);
-      } else {
-        res = await fetch(`${API}/api/attractions?${params}`);
-      }
+      const res = await fetch(`${API}/api/attractions?${params}`);
 
       const data = await res.json();
       if (res.ok) {

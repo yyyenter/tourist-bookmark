@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
-
 # ==========================================
 # 通用响应模型
 # ==========================================
@@ -30,9 +29,9 @@ class TokenPayload(BaseModel):
 class PageParams(BaseModel):
     """分页参数"""
     skip: int = Field(default=0, ge=0)
-    limit: int = Field(default=10, ge=1, le=100)
+    limit: int = Field(default=12, ge=1, le=100)
 
-
+    
 class PageResponse(BaseModel):
     """分页响应"""
     data: List[object]

@@ -9,7 +9,10 @@ import pymysql
 from model import (
     CREATE_USER_TABLE,
     CREATE_ATTRACTION_TABLE,
-    CREATE_BOOKMARK_TABLE
+    CREATE_BOOKMARK_TABLE,
+    CREATE_ACCOMMODATION_TABLE,
+    CREATE_RESTAURANT_TABLE,
+    CREATE_TRANSPORT_TABLE
 )
 
 def get_mysql_connection():
@@ -63,6 +66,15 @@ def create_tables(conn):
 
     # 创建 Bookmark 表
     cursor.execute(CREATE_BOOKMARK_TABLE)
+
+    # 创建 Accommodation 表
+    cursor.execute(CREATE_ACCOMMODATION_TABLE)
+
+    # 创建 Restaurant 表
+    cursor.execute(CREATE_RESTAURANT_TABLE)
+
+    # 创建 Transport 表
+    cursor.execute(CREATE_TRANSPORT_TABLE)
 
     conn.commit()
     cursor.close()

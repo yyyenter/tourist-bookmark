@@ -23,7 +23,14 @@
       "Bash(git commit *)",
       "Bash(git remote *)",
       "Bash(git branch *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(python data/import_data.py)",
+      "Bash(python *)",
+      "Bash(Start-Process -NoNewWindow -FilePath \"python\" -ArgumentList \"-m uvicorn main:app --host 0.0.0.0 --port 8000\" -RedirectStandardOutput \"server_stdout.log\" -RedirectStandardError \"server_stderr.log\")",
+      "Bash(Start-Sleep 3)",
+      "PowerShell(Start-Process -NoNewWindow -FilePath \"python\" -ArgumentList \"-m uvicorn main:app --host 0.0.0.0 --port 8000\" -RedirectStandardOutput \"server_stdout.log\" -RedirectStandardError \"server_stderr.log\"; Start-Sleep 3; Get-Content server_stdout.log -Tail 5)",
+      "PowerShell(cd E:\\\\Python\\\\FASTAPI_SQL; $p = Start-Process -NoNewWindow -PassThru -FilePath \"python\" -ArgumentList \"-m uvicorn main:app --host 0.0.0.0 --port 8000\"; Write-Output \"PID: $\\($p.Id\\)\")",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

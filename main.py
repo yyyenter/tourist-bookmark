@@ -93,10 +93,10 @@ def get_attractions(
     )
     return {"data": [parse_attraction(r) for r in results], "count": count}
 
-@app.get('/api/attractions/{attraction_id}', response_model=AttractionPublic)
-def get_attraction(attraction_id: int, db=Depends(get_db)):
+@app.get('/api/attractions/{id}', response_model=AttractionPublic)
+def get_attraction(id: int, db=Depends(get_db)):
     """根据主键 ID 获取具体的景点元数据"""
-    result = crud.get_attraction_by_id(db, attraction_id)
+    result = crud.get_attraction_by_id(db, id)
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
     return parse_attraction(result)

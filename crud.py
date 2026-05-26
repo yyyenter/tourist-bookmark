@@ -8,7 +8,7 @@ from pymysql.cursors import DictCursor
 def get_attraction_by_id(db, attraction_id: int) -> Optional[Dict[str, Any]]:
     """根据原始 attraction_id 获取单个景点详情"""
     cursor = db.cursor()
-    sql = "SELECT * FROM attractions WHERE attraction_id = %s"
+    sql = "SELECT * FROM attractions WHERE id = %s"
     cursor.execute(sql, (attraction_id,))
     result = cursor.fetchone()
     cursor.close()
@@ -86,3 +86,48 @@ def get_user_by_email(db, email: str) -> Optional[Dict[str, Any]]:
     user = cursor.fetchone()
     cursor.close()
     return user
+
+# crud.py 追加
+
+def add_bookmark(db, user_id: int, attraction_id: int) -> bool:
+    """添加收藏（利用 INSERT IGNORE 规避联合唯一索引重复报错）"""
+    cursor = db.cursor()
+    # 这里的 attraction_id 对应 DDL 里的实际 attraction_id 业务字段
+    sql = "INSERT IGNORE INTO bookmarks (user_id, attraction_id) VALUES (%s, %s)"
+    cursor.execute(sql, (user_id, attraction_id))
+    db.commit()
+    affected_rows = cursor.rowcount
+    cursor.close()
+    return affected_rows > 0
+
+def remove_bookmark(db, user_id: int, attraction_id: int) -> bool:
+    """取消收藏"""
+    cursor = db.cursor()
+    sql = "DELETE FROM bookmarks WHERE user_id = %s AND attraction_id = %s"
+    cursor.execute(sql, (user_id, attraction_id))
+    db.commit()
+    affected_rows = cursor.rowcount
+    cursor.close()
+    return affected_rows > 0
+
+def get_user_bookmarks_with_details(db, user_id: int) -> List[Dict[str, Any]]:
+    """核心：多表联查（DQL），获取用户收藏的景点详细信息"""
+    cursor = db.cursor()
+    sql = """
+        SELECT 
+            b.id, 
+            b.attraction_id, 
+            b.created_at,
+            a.attraction_name,
+            a.city_name,
+            a.ticket_price,
+            a.type
+        FROM bookmarks b
+        INNER JOIN attractions a ON b.attraction_id = a.attraction_id
+        WHERE b.user_id = %s
+        ORDER BY b.id DESC
+    """
+    cursor.execute(sql, (user_id,))
+    results = cursor.fetchall()
+    cursor.close()
+    return results
