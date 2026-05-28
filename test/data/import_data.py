@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database import DB_PATH, init_db
 
-# knowledge 目录在 test 的上级
+# knowledge 目录在 test 文件夹内
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-KNOWLEDGE = os.path.join(os.path.dirname(BASE), "knowledge")
+KNOWLEDGE = os.path.join(BASE, "knowledge")
 DESTINATIONS = os.path.join(KNOWLEDGE, "destinations", "database")
 GLOBAL_DATA = os.path.join(KNOWLEDGE, "datas", "attraction_data")
 

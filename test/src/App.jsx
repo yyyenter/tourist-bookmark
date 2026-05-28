@@ -166,7 +166,7 @@ function AttractionList({
                   <span>建议游览: {a.duration_of_visit}</span>
                 )}
               </p>
-              {token && (
+              {token ? (
                 <button
                   className="btn-bookmark"
                   onClick={(e) => {
@@ -175,6 +175,15 @@ function AttractionList({
                   }}
                 >
                   收藏
+                </button>
+              ) : (
+                <button
+                  className="btn-bookmark"
+                  style={{ opacity: 0.5, cursor: "not-allowed" }}
+                  onClick={(e) => e.stopPropagation()}
+                  title="请先登录"
+                >
+                  收藏 (请先登录)
                 </button>
               )}
             </div>
@@ -283,7 +292,7 @@ function RegisterPage({ msg, onRegister }) {
 // ==========================================
 // 收藏列表组件
 // ==========================================
-function BookmarkList({ bookmarks, onRemove }) {
+function BookmarkList({ bookmarks, onRemove, onViewDetail }) {
   return (
     <div className="page">
       <h2>我的收藏</h2>
@@ -292,12 +301,28 @@ function BookmarkList({ bookmarks, onRemove }) {
       ) : (
         <div className="card-list">
           {bookmarks.map((b) => (
-            <div className="card" key={b.id}>
-              <h3>景点 #{b.attraction_id}</h3>
-              <p className="card-meta">收藏时间: {b.created_at}</p>
+            <div
+              className="card"
+              key={b.id}
+              onClick={() => onViewDetail && onViewDetail(b.attraction_id)}
+            >
+              <h3>{b.attraction_name || `景点 #${b.attraction_id}`}</h3>
+              <p className="card-meta">
+                {b.city_name && <span>{b.city_name}</span>}
+                {b.type && <span className="tag">{b.type}</span>}
+                {b.ticket_price != null && (
+                  <span className="price">¥{b.ticket_price}</span>
+                )}
+              </p>
+              <p className="card-info">
+                <span>收藏时间: {b.created_at}</span>
+              </p>
               <button
                 className="btn-bookmark danger"
-                onClick={() => onRemove(b.attraction_id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(b.attraction_id);
+                }}
               >
                 取消收藏
               </button>
@@ -591,7 +616,13 @@ export default function App() {
       case "register":
         return <RegisterPage msg={msg} onRegister={register} />;
       case "bookmarks":
-        return <BookmarkList bookmarks={bookmarks} onRemove={removeBookmark} />;
+        return (
+          <BookmarkList
+            bookmarks={bookmarks}
+            onRemove={removeBookmark}
+            onViewDetail={viewDetail}
+          />
+        );
       case "detail":
         return (
           <AttractionDetail

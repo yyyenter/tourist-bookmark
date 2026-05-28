@@ -43,7 +43,13 @@
       "Bash(awk '{print $5}')",
       "Bash(pkill -f \"uvicorn\")",
       "Bash(pkill -f \"node.*vite\")",
-      "Bash(cmd //c \"run.bat\")"
+      "Bash(cmd //c \"run.bat\")",
+      "Bash(python3 -c ' *)",
+      "PowerShell(pip install *)",
+      "Bash(findstr \":5173\\\\|:5174\\\\|:5175\\\\|:8000\")",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(Select-Object -First 3)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8000/api/attractions?limit=1\" -Method Get | ConvertTo-Json -Depth 2 | Select-Object -First 5)"
     ]
   }
 }
