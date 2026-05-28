@@ -11,7 +11,7 @@ from jose import jwt, JWTError
 import bcrypt
 
 # 导入底层驱动及统一的模型定义
-from database import get_mysql_connection
+from database import get_db
 import crud
 # 统一使用标准的 schemas 架构，防止模型定义在项目中乱飞
 from schemas import (
@@ -77,39 +77,38 @@ def verify_token(token: str) -> int:
 
 # ==========================================
 # 依赖注入 (Dependency Injection)
+# get_db 已从 database 模块导入，直接使用
 # ==========================================
-def get_db():
-    """每个请求独立的数据库连接上下文寿命周期管理"""
-    conn = get_mysql_connection()
-    try:
-        yield conn
-    finally:
-        conn.close()
 
 
 # ==========================================
 # 数据解析器 (Data Parsers)
 # ==========================================
-def parse_attraction(row: dict) -> dict:
-    """将数据库 Dict 转换为符合规范的数据格式，防范数据类型 Shortcut"""
+def parse_attraction(row) -> dict:
+    """将数据库 Row 转换为符合规范的数据格式（兼容 sqlite3.Row 和 dict）"""
+    # SQLite Row 对象不支持 .get()，先转为 dict
+    if not isinstance(row, dict):
+        d = dict(row)
+    else:
+        d = row
     return {
-        "id": row["id"],
-        "attraction_id": row["attraction_id"],
-        "city_name": row["city_name"],
-        "attraction_name": row["attraction_name"],
-        "address": row.get("address"),
-        "longitude": float(row["longitude"]) if row.get("longitude") else None,
-        "latitude": float(row["latitude"]) if row.get("latitude") else None,
-        "open_hours": row.get("open_hours"),
-        "ticket_price": float(row["ticket_price"]) if row.get("ticket_price") else None,
-        "overview": row.get("overview"),
-        "facilities": row.get("facilities"),
-        "type": row.get("type"),
-        "duration_of_visit": row.get("duration_of_visit"),
-        "rate_of_restaurant": float(row["rate_of_restaurant"]) if row.get("rate_of_restaurant") else None,
-        "facilities_group": row.get("facilities_group"),
-        "country": row.get("country"),
-        "created_at": row.get("created_at")
+        "id": d["id"],
+        "attraction_id": d["attraction_id"],
+        "city_name": d["city_name"],
+        "attraction_name": d["attraction_name"],
+        "address": d.get("address"),
+        "longitude": float(d["longitude"]) if d.get("longitude") else None,
+        "latitude": float(d["latitude"]) if d.get("latitude") else None,
+        "open_hours": d.get("open_hours"),
+        "ticket_price": float(d["ticket_price"]) if d.get("ticket_price") else None,
+        "overview": d.get("overview"),
+        "facilities": d.get("facilities"),
+        "type": d.get("type"),
+        "duration_of_visit": d.get("duration_of_visit"),
+        "rate_of_restaurant": float(d["rate_of_restaurant"]) if d.get("rate_of_restaurant") else None,
+        "facilities_group": d.get("facilities_group"),
+        "country": d.get("country"),
+        "created_at": d.get("created_at")
     }
 
 
@@ -141,8 +140,8 @@ def get_attraction(id: int, db=Depends(get_db)):
     if not result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
 
-    # 获取相关交通路线
-    transport_routes = crud.get_transport_routes_by_city(db, result["city_name"])
+    # 获取相关交通路线（转为普通 dict）
+    transport_routes = [dict(r) for r in crud.get_transport_routes_by_city(db, result["city_name"])]
 
     # 解析景点数据并添加交通信息
     attraction_data = parse_attraction(result)
@@ -226,7 +225,7 @@ def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
 def get_bookmarks(current_user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
     """获取当前登录用户的所有收藏景点（带详情）"""
     results = crud.get_user_bookmarks_with_details(db, current_user_id)
-    return {"data": results, "count": len(results)}
+    return {"data": [dict(r) for r in results], "count": len(results)}
 
 @app.post('/api/bookmarks/{attraction_id}')
 def add_bookmark(attraction_id: int, current_user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
@@ -253,9 +252,9 @@ def remove_bookmark(attraction_id: int, current_user_id: int = Depends(get_curre
 def get_current_user(current_user_id: int = Depends(get_current_user_id), db=Depends(get_db)):
     """获取个人基本信息"""
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = %s", (current_user_id,))
+    cursor.execute("SELECT * FROM users WHERE id = ?", (current_user_id,))
     user = cursor.fetchone()
     cursor.close()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return dict(user)

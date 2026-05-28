@@ -1,25 +1,26 @@
 """
-crud.py - 数据库增删改查核心逻辑
-支持被 FastAPI 路由层和后台 Multi-Agent (如 crewAI) 共同调用
+crud.py - SQLite 数据库 CRUD 操作
+注意：使用 ? 占位符而非 %s
 """
 from typing import Optional, List, Dict, Any
-from pymysql.cursors import DictCursor
+
 
 def get_attraction_by_id(db, attraction_id: int) -> Optional[Dict[str, Any]]:
     """根据原始 attraction_id 获取单个景点详情"""
     cursor = db.cursor()
-    sql = "SELECT * FROM attractions WHERE id = %s"
+    sql = "SELECT * FROM attractions WHERE id = ?"
     cursor.execute(sql, (attraction_id,))
     result = cursor.fetchone()
     cursor.close()
     return result
 
+
 def fetch_attractions(
-    db, 
-    limit: int = 10, 
-    skip: int = 0, 
-    city: Optional[str] = None, 
-    attraction_type: Optional[str] = None, 
+    db,
+    limit: int = 10,
+    skip: int = 0,
+    city: Optional[str] = None,
+    attraction_type: Optional[str] = None,
     search: Optional[str] = None
 ) -> tuple[List[Dict[str, Any]], int]:
     """
@@ -27,30 +28,29 @@ def fetch_attractions(
     返回: (景点数据列表, 满足筛选条件的总记录数)
     """
     cursor = db.cursor()
-    
+
     # 1. 动态构建查询数据 SQL
     base_sql = "FROM attractions WHERE 1=1"
     params_list = []
 
     if city:
-        base_sql += " AND city_name = %s"
+        base_sql += " AND city_name = ?"
         params_list.append(city)
     if attraction_type:
-        base_sql += " AND type = %s"
+        base_sql += " AND type = ?"
         params_list.append(attraction_type)
     if search:
-        base_sql += " AND (attraction_name LIKE %s OR city_name LIKE %s)"
+        base_sql += " AND (attraction_name LIKE ? OR city_name LIKE ?)"
         search_term = f"%{search}%"
         params_list.extend([search_term, search_term])
 
     # 2. 查询分页数据
-    data_sql = f"SELECT * {base_sql} ORDER BY id DESC LIMIT %s OFFSET %s"
-    # 注意：Limit 和 Offset 的参数需要跟在条件参数后面
+    data_sql = f"SELECT * {base_sql} ORDER BY id DESC LIMIT ? OFFSET ?"
     query_params = params_list + [limit, skip]
     cursor.execute(data_sql, query_params)
     results = cursor.fetchall()
 
-    # 3. 动态查询总数 (Count 逻辑保持与筛选条件严格一致)
+    # 3. 动态查询总数
     count_sql = f"SELECT COUNT(*) as count {base_sql}"
     cursor.execute(count_sql, params_list)
     count_res = cursor.fetchone()
@@ -59,29 +59,32 @@ def fetch_attractions(
     cursor.close()
     return results, count
 
+
 def check_user_exists_by_email(db, email: str) -> bool:
     """检查邮箱是否已被注册"""
     cursor = db.cursor()
-    sql = "SELECT id FROM users WHERE email = %s"
+    sql = "SELECT id FROM users WHERE email = ?"
     cursor.execute(sql, (email,))
     exists = cursor.fetchone() is not None
     cursor.close()
     return exists
 
+
 def create_user(db, email: str, hashed_password: str, full_name: Optional[str] = None) -> int:
     """创建新用户，返回生成的用户 ID"""
     cursor = db.cursor()
-    sql = "INSERT INTO users (email, hashed_password, full_name) VALUES (%s, %s, %s)"
+    sql = "INSERT INTO users (email, hashed_password, full_name) VALUES (?, ?, ?)"
     cursor.execute(sql, (email, hashed_password, full_name))
     db.commit()
     user_id = cursor.lastrowid
     cursor.close()
     return user_id
 
+
 def get_user_by_email(db, email: str) -> Optional[Dict[str, Any]]:
     """根据邮箱获取用户信息（登录校验用）"""
     cursor = db.cursor()
-    sql = "SELECT * FROM users WHERE email = %s"
+    sql = "SELECT * FROM users WHERE email = ?"
     cursor.execute(sql, (email,))
     user = cursor.fetchone()
     cursor.close()
@@ -89,28 +92,29 @@ def get_user_by_email(db, email: str) -> Optional[Dict[str, Any]]:
 
 
 def add_bookmark(db, user_id: int, attraction_id: int) -> bool:
-    """添加收藏（利用 INSERT IGNORE 规避联合唯一索引重复报错）"""
+    """添加收藏（利用 INSERT OR IGNORE 规避重复报错）"""
     cursor = db.cursor()
-    # 这里的 attraction_id 对应 DDL 里的实际 attraction_id 业务字段
-    sql = "INSERT IGNORE INTO bookmarks (user_id, attraction_id) VALUES (%s, %s)"
+    sql = "INSERT OR IGNORE INTO bookmarks (user_id, attraction_id) VALUES (?, ?)"
     cursor.execute(sql, (user_id, attraction_id))
     db.commit()
     affected_rows = cursor.rowcount
     cursor.close()
     return affected_rows > 0
+
 
 def remove_bookmark(db, user_id: int, attraction_id: int) -> bool:
     """取消收藏"""
     cursor = db.cursor()
-    sql = "DELETE FROM bookmarks WHERE user_id = %s AND attraction_id = %s"
+    sql = "DELETE FROM bookmarks WHERE user_id = ? AND attraction_id = ?"
     cursor.execute(sql, (user_id, attraction_id))
     db.commit()
     affected_rows = cursor.rowcount
     cursor.close()
     return affected_rows > 0
 
+
 def get_user_bookmarks_with_details(db, user_id: int) -> List[Dict[str, Any]]:
-    """核心：多表联查（DQL），获取用户收藏的景点详细信息"""
+    """获取用户收藏的景点详细信息"""
     cursor = db.cursor()
     sql = """
         SELECT
@@ -123,7 +127,7 @@ def get_user_bookmarks_with_details(db, user_id: int) -> List[Dict[str, Any]]:
             a.type
         FROM bookmarks b
         INNER JOIN attractions a ON b.attraction_id = a.id
-        WHERE b.user_id = %s
+        WHERE b.user_id = ?
         ORDER BY b.id DESC
     """
     cursor.execute(sql, (user_id,))
@@ -139,7 +143,7 @@ def get_transport_routes_by_city(db, city_name: str) -> List[Dict[str, Any]]:
         SELECT route_id, transport_type, from_location, to_location,
                begin_time, end_time, duration, cost
         FROM transport_routes
-        WHERE from_location LIKE %s OR to_location LIKE %s
+        WHERE from_location LIKE ? OR to_location LIKE ?
         ORDER BY begin_time
         LIMIT 10
     """

@@ -30,7 +30,20 @@
       "Bash(Start-Sleep 3)",
       "PowerShell(Start-Process -NoNewWindow -FilePath \"python\" -ArgumentList \"-m uvicorn main:app --host 0.0.0.0 --port 8000\" -RedirectStandardOutput \"server_stdout.log\" -RedirectStandardError \"server_stderr.log\"; Start-Sleep 3; Get-Content server_stdout.log -Tail 5)",
       "PowerShell(cd E:\\\\Python\\\\FASTAPI_SQL; $p = Start-Process -NoNewWindow -PassThru -FilePath \"python\" -ArgumentList \"-m uvicorn main:app --host 0.0.0.0 --port 8000\"; Write-Output \"PID: $\\($p.Id\\)\")",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(pip uninstall *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :8000)",
+      "Bash(taskkill *)",
+      "Bash(timeout 3 bash -c 'until curl -s http://localhost:5173 > /dev/null 2>&1; do sleep 0.5; done; echo \"Server is ready\"')",
+      "Bash(npx prettier *)",
+      "Bash(xcopy *)",
+      "PowerShell(Start-Sleep -Seconds 3; $body = @{email='demo@test.com';password='demo123456'} | ConvertTo-Json; $r1 = Invoke-RestMethod -Uri 'http://localhost:8000/api/attractions/1' -Method Get; Write-Host \"=== 景点详情 ===\"; Write-Host $r1.attraction_name; Write-Host $r1.city_name; Write-Host \"=== 注册 ===\"; try { $r2 = Invoke-RestMethod -Uri 'http://localhost:8000/api/register' -Method Post -Body $body -ContentType 'application/json'; Write-Host $r2 } catch { Write-Host $_.Exception.Message }; Write-Host \"=== 登录 ===\"; try { $r3 = Invoke-RestMethod -Uri 'http://localhost:8000/api/login' -Method Post -Body $body -ContentType 'application/json'; Write-Host \"token: $\\($r3.access_token.Substring\\(0,50\\)\\)...\" } catch { Write-Host $_.Exception.Message })",
+      "Bash(pkill -f \"uvicorn main:app\")",
+      "Bash(awk '{print $5}')",
+      "Bash(pkill -f \"uvicorn\")",
+      "Bash(pkill -f \"node.*vite\")",
+      "Bash(cmd //c \"run.bat\")"
     ]
   }
 }
